@@ -1,4 +1,3 @@
-'use strict';
 
 const express = require('express');
 const morgan = require('morgan');
@@ -9,39 +8,44 @@ app.use(morgan('common'));
 
 const storeApps = require('./playstore.js');
 
-app.get('/apps', (req, res) => {
-  const {genre, sort} = req.query;
-
-  if(!genre){
-    return res
-      .status(400)
-      .send('Enter a valid genre');
-  }
-
-  let appsByGenre = storeApps.filter(storeApp => storeApp.Genres.toLowerCase().includes(genre.toLowerCase()));
-  
-  if(sort){
-    if (!['App', 'Rating'].includes(sort)) {
+app.get('/apps',(req,res) =>{
+  const { sort, genres } = req.query;
+ 
+  if (sort) {
+    if (!['Rating', 'App'].includes(sort)) {
       return res
         .status(400)
-        .send('Sort must be one of App or Rating');
+        .send('Sort must be one of rating or app');
+    }
+  }
+  if (genres) {
+    if (!['action', 'puzzle','strategy','casual','arcade','card'].includes(genres.toLowerCase())) {
+      return res
+        .status(400)
+        .send('Genre must be Action,Puzzle,strategey,Casual,Arcade,Card');
     }
   }
 
-  if (sort === 'Rating') {
-    appsByGenre.sort((a, b) => {
-      return a[sort] > b[sort] ? 1 : a[sort] < b[sort] ? -1 : 0;
-    }); 
-  }
-  
-  if (sort === 'App') {
-    appsByGenre.sort((a, b) => {
-      return a[sort].toLowerCase() > b[sort].toLowerCase() ? 1 : a[sort].toLowerCase() < b[sort].toLowerCase() ? -1 : 0;
-    }); 
-  }
+  let results = storeApps
+    .filter(game =>
+    {
+      if(genres) {
+        return game.Genres.toLowerCase().includes(genres.toLowerCase());
+      } else {
+        return true;
+      }
+    });
 
+  if (sort) {
+    results
+      .sort((a, b) => {
+        return a[sort] > b[sort] ? 1 : a[sort] < b[sort] ? -1 : 0;
+      });
+     
+  }
+ 
   res
-    .json(appsByGenre);
+    .json(results);
 });
 
 module.exports = app;
