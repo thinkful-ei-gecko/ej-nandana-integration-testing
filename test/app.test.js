@@ -13,6 +13,7 @@ describe('Genre search', () => {
       .expect('Content-Type', /json/)
       .then(res => {
         expect(res.body).to.be.an('array');
+        expect(res.body).to.have.lengthOf.at.least(1);
       });
   });
 
@@ -42,6 +43,19 @@ describe('Genre search', () => {
           expect(sorted).to.be.true ;
         });
     });
+  });
+
+  it('should filter the list by given genre', () => {
+    return supertest(app)
+      .get('/apps')
+      .query({ genres: 'Arcade' })
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .then(res => {
+        res.body.forEach(element => {
+          expect(element.Genres).to.include('Arcade');
+        });
+      });
   });
  
 
